@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#334155"/></marker>
+  </defs>
+  <rect width="960" height="620" fill="#ffffff"/>
+  <text x="480" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">Wiring Diagram – Aplikasi AKPD BK</text>
+  <text x="480" y="56" text-anchor="middle" font-size="12" fill="#64748b">GitHub Pages (frontend) → Google Apps Script (API) → Google Sheets (database)</text>
+
+  <!-- USER -->
+  <rect x="30" y="100" width="170" height="130" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="115" y="126" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">PENGGUNA</text>
+  <text x="115" y="150" text-anchor="middle" font-size="12" fill="#1e293b">Siswa (isi AKPD)</text>
+  <text x="115" y="170" text-anchor="middle" font-size="12" fill="#1e293b">Guru BK / Admin</text>
+  <text x="115" y="196" text-anchor="middle" font-size="11" fill="#475569">Browser HP / Laptop</text>
+  <text x="115" y="214" text-anchor="middle" font-size="11" fill="#475569">+ "Ingat saya" (localStorage)</text>
+
+  <!-- GITHUB PAGES -->
+  <rect x="280" y="80" width="260" height="210" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="410" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#14532d">GITHUB PAGES (Frontend)</text>
+  <rect x="300" y="122" width="220" height="44" rx="6" fill="#ffffff" stroke="#86efac"/>
+  <text x="410" y="141" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">docs/index.html</text>
+  <text x="410" y="157" text-anchor="middle" font-size="10.5" fill="#b45309">meta "api-url" = URL Web App</text>
+  <rect x="300" y="174" width="220" height="38" rx="6" fill="#ffffff" stroke="#86efac"/>
+  <text x="410" y="190" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">docs/app.js</text>
+  <text x="410" y="205" text-anchor="middle" font-size="10.5" fill="#475569">fetch POST {fn, args}</text>
+  <rect x="300" y="220" width="220" height="54" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-dasharray="4 3"/>
+  <text x="410" y="238" text-anchor="middle" font-size="11" font-weight="600" fill="#334155">CDN (dimuat otomatis)</text>
+  <text x="410" y="255" text-anchor="middle" font-size="10.5" fill="#64748b">Bootstrap · FontAwesome</text>
+  <text x="410" y="268" text-anchor="middle" font-size="10.5" fill="#64748b">SweetAlert2 · Chart.js</text>
+
+  <!-- APPS SCRIPT -->
+  <rect x="620" y="80" width="310" height="210" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="775" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#78350f">GOOGLE APPS SCRIPT (API)</text>
+  <rect x="640" y="122" width="270" height="44" rx="6" fill="#ffffff" stroke="#fcd34d"/>
+  <text x="775" y="141" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">Code.gs → Web App /exec</text>
+  <text x="775" y="157" text-anchor="middle" font-size="10.5" fill="#475569">doPost() + daftar API_ALLOWED_</text>
+  <rect x="640" y="174" width="270" height="38" rx="6" fill="#ffffff" stroke="#fcd34d"/>
+  <text x="775" y="190" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">CacheService</text>
+  <text x="775" y="205" text-anchor="middle" font-size="10.5" fill="#475569">token sesi 6 jam · batas gagal login</text>
+  <rect x="640" y="220" width="270" height="54" rx="6" fill="#ffffff" stroke="#fcd34d"/>
+  <text x="775" y="238" text-anchor="middle" font-size="12" font-weight="600" fill="#0f172a">PropertiesService</text>
+  <text x="775" y="254" text-anchor="middle" font-size="10.5" fill="#475569">REMEMBER_SECRET (dibuat otomatis)</text>
+  <text x="775" y="267" text-anchor="middle" font-size="10.5" fill="#475569">Deploy: Execute as Me · Access Anyone</text>
+
+  <!-- SHEETS -->
+  <rect x="620" y="360" width="310" height="230" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+  <text x="775" y="386" text-anchor="middle" font-size="14" font-weight="700" fill="#064e3b">GOOGLE SHEETS (Database)</text>
+  <text x="775" y="404" text-anchor="middle" font-size="10.5" fill="#475569">Apps Script terikat (bound) ke spreadsheet ini</text>
+  <g font-size="11.5" fill="#0f172a">
+    <rect x="640" y="416" width="270" height="30" rx="5" fill="#fff" stroke="#6ee7b7"/><text x="654" y="435"><tspan font-weight="600">Config</tspan> – identitas sekolah &amp; logo</text>
+    <rect x="640" y="452" width="270" height="30" rx="5" fill="#fff" stroke="#6ee7b7"/><text x="654" y="471"><tspan font-weight="600">Users</tspan> – akun siswa &amp; guru (hash)</text>
+    <rect x="640" y="488" width="270" height="30" rx="5" fill="#fff" stroke="#6ee7b7"/><text x="654" y="507"><tspan font-weight="600">AKPD_Soal</tspan> – bank soal per kelas</text>
+    <rect x="640" y="524" width="270" height="30" rx="5" fill="#fff" stroke="#6ee7b7"/><text x="654" y="543"><tspan font-weight="600">AKPD_Jawaban</tspan> – hasil isian siswa</text>
+    <rect x="640" y="560" width="270" height="22" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 3"/><text x="654" y="575" fill="#64748b">Alumni (opsional) · Petunjuk</text>
+  </g>
+
+  <!-- ARROWS -->
+  <line x1="200" y1="165" x2="278" y2="165" stroke="#334155" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="239" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">①</text>
+  <line x1="540" y1="165" x2="618" y2="165" stroke="#334155" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="579" y="152" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">②</text>
+  <line x1="775" y1="290" x2="775" y2="358" stroke="#334155" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="790" y="328" font-size="11" font-weight="700" fill="#334155">③</text>
+
+  <!-- LEGEND -->
+  <rect x="30" y="340" width="540" height="250" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="50" y="366" font-size="13" font-weight="700" fill="#0f172a">Keterangan alur</text>
+  <g font-size="12" fill="#1e293b">
+    <text x="50" y="394">① Pengguna membuka link GitHub Pages → browser memuat</text>
+    <text x="66" y="411">index.html + app.js (HTML/CSS/JS statis).</text>
+    <text x="50" y="440">② app.js mengirim POST (text/plain, berisi JSON {fn, args})</text>
+    <text x="66" y="457">ke URL Web App di meta "api-url". Server membalas JSON</text>
+    <text x="66" y="474">{ok, data}. Hanya fungsi di API_ALLOWED_ yang dilayani.</text>
+    <text x="50" y="503">③ Code.gs membaca/menulis sheet di spreadsheet yang sama</text>
+    <text x="66" y="520">(login, ambil soal, simpan jawaban, rekap, cetak laporan).</text>
+    <text x="50" y="555" font-weight="700" fill="#b45309">Yang harus disambungkan (wiring):</text>
+    <text x="50" y="574" fill="#b45309">URL Web App /exec  →  meta "api-url" di docs/index.html</text>
+  </g>
+</svg>

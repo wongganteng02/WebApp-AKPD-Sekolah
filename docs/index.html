@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Isi content dengan URL Web App Apps Script (yang berakhiran /exec) -->
+    <meta name="api-url" content="GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT">
+    <title>Aplikasi AKPD - Bimbingan dan Konseling</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; min-height: 100vh; }
+        .main-container { flex: 1; }
+        .login-card { max-width: 540px; margin: 50px auto; border-radius: 20px; box-shadow: 0 15px 40px rgba(15, 23, 42, 0.1); border: 2px solid #e2e8f0; background: #ffffff; position: relative; overflow: hidden; }
+        .login-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 8px; background: linear-gradient(90deg, #0d6efd, #0dcaf0, #198754); }
+        .school-logo { width: 95px; height: 95px; object-fit: contain; margin-bottom: 15px; border-radius: 50%; padding: 8px; background: #f8fafc; border: 2px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .navbar-brand { font-weight: 700; font-size: 1.05rem; }
+        .card { border-radius: 12px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 20px; }
+        .settings-btn { position: absolute; top: 22px; right: 22px; background: #f1f5f9; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; color: #475569; transition: all 0.2s; cursor: pointer; z-index: 10; }
+        .settings-btn:hover { background: #e2e8f0; color: #0f172a; }
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); z-index: 99999; display: none; justify-content: center; align-items: center; }
+        /* Watermark Aplikasi Bawah (Font Bagus, Kecil, Transparan & Tidak Tercetak) */
+        .app-watermark {
+            text-align: center;
+            font-size: 0.73rem;
+            color: rgba(71, 85, 105, 0.5);
+            letter-spacing: 0.8px;
+            padding: 24px 0 16px 0;
+            margin-top: auto;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-weight: 400;
+        }
+        .app-watermark span {
+            font-weight: 600;
+            color: rgba(30, 41, 59, 0.55);
+            border-bottom: 1px dotted rgba(71, 85, 105, 0.3);
+            padding-bottom: 1px;
+        }
+        @media print {
+            body, html { width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; }
+            body * { visibility: hidden; }
+            #printableProfilArea, #printableProfilArea *, #printableKonseliArea, #printableKonseliArea *, #printableRumusanArea, #printableRumusanArea *, #printableTujuanArea, #printableTujuanArea *, #printableKomponenArea, #printableKomponenArea *, #printableActionPlanArea, #printableActionPlanArea *, #printableAnalisaArea, #printableAnalisaArea * { visibility: visible; }
+            .main-container, #guruSection, .container, .card { margin: 0 !important; padding: 0 !important; border: none !important; box-shadow: none !important; width: 100% !important; max-width: 100% !important; background: #ffffff !important; }
+            #printableProfilArea, #printableKonseliArea, #printableRumusanArea, #printableTujuanArea, #printableKomponenArea, #printableActionPlanArea, #printableAnalisaArea { 
+                position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; 
+            }
+            .text-center.mb-3.pb-2.border-bottom {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+                margin-bottom: 15px !important;
+            }
+            thead { display: table-header-group; }
+            tr { page-break-inside: avoid; break-inside: avoid; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th, td { padding: 5px 8px !important; }
+            .row.mt-4.pt-2 { page-break-inside: avoid !important; break-inside: avoid !important; margin-top: 25px !important; }
+            /* Sembunyikan Watermark Saat Dicetak / Export PDF */
+            .app-watermark, .no-print { display: none !important; }
+            @page { size: A4 portrait; margin: 1.2cm; }
+        }
+    
+:root{--ink:#0f2a43;--brand:#1d4e89;--brand-d:#143a6a;--accent:#0f9d8a;--accent-d:#0b8272;--bg:#f4f6fa;--line:#e3e8ef}
+body{background:var(--bg)!important;font-family:'Inter','Segoe UI',system-ui,sans-serif!important;color:#1f2d3d}
+.card{border:1px solid var(--line)!important;border-radius:14px!important;box-shadow:0 2px 10px rgba(15,42,67,.05)!important}
+.btn{border-radius:10px;font-weight:600}
+.btn-primary{background:var(--brand);border-color:var(--brand)}.btn-primary:hover{background:var(--brand-d);border-color:var(--brand-d)}
+.btn-success{background:var(--accent);border-color:var(--accent)}.btn-success:hover{background:var(--accent-d);border-color:var(--accent-d)}
+.btn-outline-primary{color:var(--brand);border-color:var(--brand)}.btn-outline-primary:hover{background:var(--brand);border-color:var(--brand)}
+.btn-info{background:#eaf0f8;border-color:#eaf0f8;color:var(--brand)}
+.text-primary{color:var(--brand)!important}.text-success{color:var(--accent)!important}
+.border-primary{border-color:var(--brand)!important}.border-success{border-color:var(--accent)!important}
+.topbar{background:linear-gradient(135deg,var(--ink),var(--brand))}
+.menubar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;overflow-x:auto;white-space:nowrap}
+.menubar .container{display:flex;gap:4px;padding:0}
+.menu-link{border:0;background:none;color:#52627a;font-weight:600;font-size:.86rem;padding:14px 14px;border-bottom:3px solid transparent}
+.menu-link:hover{color:var(--brand);background:#f4f7fb}
+.menu-link.active{color:var(--brand);border-bottom-color:var(--accent)}
+.stat{color:#fff;border:0!important;border-radius:14px}
+.stat-1{background:linear-gradient(135deg,#1d4e89,#3573b8)}.stat-2{background:linear-gradient(135deg,#0f9d8a,#2bb8a5)}.stat-3{background:linear-gradient(135deg,#334e7a,#5873a3)}
+.table-primary{--bs-table-bg:#eaf0f8;--bs-table-color:var(--ink);--bs-table-border-color:#d5dfec}
+.table>:not(caption)>*>*{padding:.65rem .75rem}
+.nav-pills .nav-link{color:#52627a;border-radius:10px}.nav-pills .nav-link.active{background:var(--brand)}
+.login-card::before{background:linear-gradient(90deg,var(--brand),var(--accent))!important}
+.form-control:focus,.form-select:focus{border-color:var(--brand);box-shadow:0 0 0 .2rem rgba(29,78,137,.15)}
+.modal-header.topbar .btn-close{filter:invert(1)}
+body{padding-bottom:48px}
+.app-watermark{position:fixed;left:0;right:0;bottom:0;margin:0;padding:8px 0;background:var(--bg);z-index:5;pointer-events:none}
+@media (max-width:767.98px){
+.topbar{padding-left:12px!important;padding-right:12px!important}
+.topbar .container-fluid{flex-wrap:nowrap;gap:8px;padding-left:0;padding-right:0}
+.topbar .navbar-brand{min-width:0;margin-right:0;flex:1 1 auto}
+.topbar .navbar-brand>div{min-width:0}
+.topbar .navbar-brand span,.topbar .navbar-brand small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#navNamaSekolahGuru{font-size:.88rem!important}
+.topbar .btn{font-size:0;padding:.45rem .65rem;margin:0 0 0 6px!important}
+.topbar .btn i{font-size:.95rem;margin:0!important}
+.menubar{padding:0 6px!important;scrollbar-width:none;position:static}
+.menubar::-webkit-scrollbar{display:none}
+.menubar .container{flex-wrap:nowrap!important;width:max-content;min-width:100%;gap:0!important}
+.menu-link{flex:0 0 auto;padding:12px 11px;font-size:.8rem}
+.container.py-4{padding-left:12px;padding-right:12px;padding-top:14px!important}
+.card.p-4,.card.p-md-5{padding:1rem!important}
+.stat{padding:.9rem 1rem!important}
+.table{font-size:.8rem}
+h4{font-size:1.1rem}
+.row.mt-4.pt-2.text-dark>.col-6{display:flex;flex-direction:column}
+.row.mt-4.pt-2.text-dark>.col-6>p.fw-bold{margin-top:auto!important}
+}
+.print-logo{position:absolute;left:6px;top:0;height:64px;width:auto;max-width:84px;object-fit:contain}
+.print-kop{position:relative;min-height:72px;padding-left:92px;padding-right:92px}
+@media print{body,html{background:#fff!important}}
+
+/* === Perbaikan blok putih di bagian bawah === */
+html{background:var(--bg);min-height:100%}
+body{box-sizing:border-box;min-height:100vh;min-height:100dvh;margin:0}
+@media print{html{background:#fff!important}}
+
+/* === Sidebar hamburger (layar kecil) === */
+.btn-hamburger{flex:0 0 auto;margin-right:8px}
+.sidebar-guru{width:285px!important;max-width:85vw}
+.sidebar-guru .offcanvas-header{padding:14px 16px}
+.sb-user{padding:10px 18px;background:#f4f7fb;color:#52627a;border-bottom:1px solid var(--line)}
+.sb-user:empty{display:none}
+.sb-menu{padding:8px 0}
+.sb-bottom{border-top:1px solid var(--line);padding:8px 0}
+.sb-link{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;text-align:left;color:#52627a;font-weight:600;font-size:.92rem;padding:12px 20px;border-left:4px solid transparent}
+.sb-link i{width:20px;text-align:center}
+.sb-link:hover{background:#f4f7fb;color:var(--brand)}
+.sb-link.active{background:#eaf0f8;color:var(--brand);border-left-color:var(--accent)}
+.sb-danger{color:#c0392b}.sb-danger:hover{background:#fdecea;color:#c0392b}
+@media (max-width:767.98px){
+.topbar .guru-actions{display:none!important}
+#guruSection .menubar{display:none!important}
+.topbar .btn.btn-hamburger{font-size:0;padding:.45rem .65rem;margin:0 8px 0 0!important}
+}
+@media (min-width:768px){.sidebar-guru,.offcanvas-backdrop{display:none!important}}
+/* === Tab login geser kiri-kanan (smooth) === */
+.login-tabs{position:relative;isolation:isolate}
+.login-tabs::before{content:"";position:absolute;z-index:0;top:.25rem;bottom:.25rem;left:.25rem;width:calc((100% - .5rem) / 2);background:var(--brand);border-radius:10px;box-shadow:0 3px 10px rgba(29,78,137,.28);transform:translateX(0);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.login-tabs.is-guru::before{transform:translateX(100%)}
+.login-tabs .nav-item{position:relative;z-index:1;flex:1 1 0}
+.login-tabs .nav-link{background:transparent!important;transition:color .3s ease}
+.login-tabs .nav-link.active{color:#fff}
+.login-tabs{flex-wrap:nowrap}
+.login-tabs .nav-item{min-width:0}
+.login-tabs .nav-link{white-space:nowrap;padding-top:.55rem;padding-bottom:.55rem}
+@media (max-width:480px){.login-tabs .nav-link{font-size:.9rem;padding-left:.35rem;padding-right:.35rem}}
+@media (max-width:360px){.login-tabs .nav-link{font-size:.8rem}}
+@media (max-width:340px){.login-tabs .nav-link{font-size:.72rem;padding-left:.2rem;padding-right:.2rem}.login-tabs .nav-link i{margin-right:.2rem!important}}
+.pw-toggle{cursor:pointer}
+.pw-toggle:hover{color:var(--brand)!important}
+/* === Rapikan tampilan laporan di HP (hanya layar kecil; desktop & cetak tidak berubah) === */
+@media screen and (max-width:767.98px){
+/* Kop laporan: logo di atas tengah, judul selebar kartu */
+.print-kop{padding-left:0;padding-right:0;min-height:0}
+.print-kop .print-logo{position:static;display:block;height:60px;width:auto;max-width:80px;margin:0 auto 10px}
+.print-kop h5{font-size:1.05rem;line-height:1.3;letter-spacing:.2px;margin-bottom:.3rem!important;text-wrap:balance}
+.print-kop h6{line-height:1.4;text-wrap:balance}
+.print-kop h6.fw-bold.text-dark{font-size:.82rem;margin-bottom:.45rem!important}
+.print-kop h6.text-muted{font-size:.66rem!important;margin-bottom:.25rem!important}
+.print-kop p{font-size:.78rem;line-height:1.65;margin-bottom:.5rem!important;text-wrap:balance}
+/* Badge bidang (Profil Kelas) jadi grid 2x2 */
+#printableProfilArea .d-flex.justify-content-center{display:grid!important;grid-template-columns:1fr 1fr;gap:6px!important;max-width:300px;margin:.35rem auto .6rem!important}
+#printableProfilArea .badge{display:block;font-size:.76rem;padding:.5em .4em!important}
+/* Baris judul + filter + tombol cetak */
+#guruSection .card.p-4>.no-print{flex-direction:column;align-items:stretch!important;justify-content:flex-start!important;gap:12px!important;margin-bottom:14px!important}
+#guruSection .card.p-4>.no-print h4{text-wrap:balance;line-height:1.3}
+#guruSection .card.p-4>.no-print>.d-flex{width:100%;flex-wrap:nowrap!important;gap:10px!important}
+#guruSection .card.p-4>.no-print>.d-flex .form-select{flex:1 1 0;width:auto!important;min-width:0}
+#guruSection .card.p-4>.no-print>.d-flex .btn{flex:0 0 auto;white-space:nowrap}
+/* Hasil Analisa: filter tersusun rapi */
+#guruTabAnalisa .card.p-4>.d-flex{flex-direction:column;align-items:stretch!important;justify-content:flex-start!important;gap:12px!important;margin-bottom:14px!important}
+#guruTabAnalisa .card.p-4>.d-flex h4{text-wrap:balance;line-height:1.3}
+#guruTabAnalisa .card.p-4>.d-flex>.d-flex{display:grid!important;grid-template-columns:1fr 1fr;gap:10px!important;width:100%}
+#guruTabAnalisa .card.p-4>.d-flex>.d-flex>label{grid-column:1/-1;margin:0 0 -4px}
+#guruTabAnalisa .card.p-4>.d-flex>.d-flex>.form-select,#guruTabAnalisa .card.p-4>.d-flex>.d-flex>.form-control{grid-column:1/-1;width:100%!important}
+#guruTabAnalisa .card.p-4>.d-flex>.d-flex>.btn{width:100%;white-space:nowrap}
+/* Blok tanda tangan (Mengetahui / Guru BK) */
+#guruSection .row.mt-4.pt-2.text-dark{font-size:.76rem!important}
+#guruSection .row.mt-4.pt-2.text-dark .fw-bold{text-wrap:balance}
+/* Tabel: lebar minimum supaya kolom tidak terjepit; digeser kiri-kanan di dalam kartu */
+.table-responsive{border-radius:8px;-webkit-overflow-scrolling:touch}
+#printableProfilArea table{min-width:560px}
+#printableKonseliArea table{min-width:420px}
+#printableRumusanArea table,#printableTujuanArea table{min-width:560px}
+#printableKomponenArea table{min-width:600px}
+#printableActionPlanArea table{min-width:820px}
+#printableAnalisaArea table{min-width:760px}
+}
+</style>
+</head>
+<body>
+    <div id="loadingOverlay"><div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div></div>
+    <div class="main-container">
+        <!-- HALAMAN LOGIN -->
+        <div id="loginSection" class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card login-card p-4 p-md-5">
+                        
+                        <div class="text-center mb-4">
+                            <img id="loginLogoImg" src="https://via.placeholder.com/150" alt="Logo Sekolah" class="school-logo">
+                            <div id="loginYayasan" class="text-uppercase text-muted fw-bold small tracking-wide mb-1" style="letter-spacing: 1px;">MEMUAT YAYASAN...</div>
+                            <h2 id="loginNamaSekolah" class="fw-bold text-dark mb-1" style="font-size: 1.8rem;">Memuat Sekolah...</h2>
+                            <p class="text-primary fw-semibold small mb-2"><i class="fas fa-id-badge me-1"></i>Asesmen Kebutuhan Peserta Didik</p>
+                            <p id="loginAlamatSekolah" class="text-secondary small mb-3"><i class="fas fa-map-marker-alt me-1"></i> Memuat Alamat...</p>
+                            <hr class="w-25 mx-auto text-muted opacity-50">
+                        </div>
+                        <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light rounded-3 shadow-sm login-tabs" id="loginTab" role="tablist">
+                            <li class="nav-item" role="presentation"><button class="nav-link active fw-semibold py-2" id="tab-murid" type="button" onclick="setRoleTarget('siswa')"><i class="fas fa-user-graduate me-1"></i> Login Murid</button></li>
+                            <li class="nav-item" role="presentation"><button class="nav-link fw-semibold py-2" id="tab-guru" type="button" onclick="setRoleTarget('guru')"><i class="fas fa-chalkboard-user me-1"></i> Login Guru BK</button></li>
+                        </ul>
+                        <form id="loginForm" onsubmit="handleLogin(event)">
+                            <input type="hidden" id="selectedRole" value="siswa">
+                            <div class="mb-3">
+                                <label id="labelUsername" class="form-label">NISN / Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="fas fa-user"></i></span>
+                                    <input type="text" id="username" class="form-control border-start-0" required placeholder="Masukkan NISN Anda">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-secondary"><i class="fas fa-lock"></i></span>
+                                    <input type="password" id="password" class="form-control border-start-0 border-end-0" required placeholder="Masukkan password" autocomplete="current-password">
+                                    <button type="button" id="btnTogglePw" class="input-group-text bg-light border-start-0 text-secondary pw-toggle" aria-label="Tampilkan password" aria-pressed="false" onclick="togglePasswordLogin()"><i class="fas fa-eye" id="iconTogglePw"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="ingatSaya">
+                                <label class="form-check-label small text-secondary" for="ingatSaya" style="cursor:pointer;">Ingat saya</label>
+                            </div>
+                            <button type="submit" id="btnLoginSubmit" class="btn btn-primary w-100 py-2.5 fw-semibold shadow-sm"><i class="fas fa-sign-in-alt me-2"></i> Masuk sebagai Murid</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="app-watermark">Dikembangkan oleh : <span>Nama Pengembang / Tim IT</span></div>
+        </div>
+        <!-- DASHBOARD GURU BK -->
+        <div id="guruSection" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-dark topbar shadow-sm px-4">
+                <div class="container-fluid">
+                    <button class="btn btn-light btn-sm shadow-sm d-md-none btn-hamburger" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarGuru" aria-controls="sidebarGuru" aria-label="Buka menu"><i class="fas fa-bars"></i></button>
+                    <a class="navbar-brand d-flex align-items-center" href="#">
+                        <img id="navLogoGuru" src="" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;" class="bg-white rounded-circle p-1 me-2 shadow-sm">
+                        <div style="line-height: 1.2;">
+                            <small id="navYayasanGuru" class="d-block text-white-50 text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;"></small>
+                            <span id="navNamaSekolahGuru" class="d-block fw-bold" style="font-size: 1rem;">Panel Guru BK</span>
+                        </div>
+                    </a>
+                    <div class="d-flex align-items-center guru-actions">
+                        <span class="text-white me-3 small d-none d-md-inline" id="userInfoGuru"></span>
+                        <button class="btn btn-light btn-sm text-primary fw-semibold me-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#settingsModal"><i class="fas fa-cog me-1"></i> Pengaturan</button>
+                        <button class="btn btn-light btn-sm fw-semibold shadow-sm me-2" onclick="changePwUI()"><i class="fas fa-key me-1"></i> Ganti Password</button><button class="btn btn-danger btn-sm fw-semibold shadow-sm" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i> Keluar</button>
+                    </div>
+                </div>
+            </nav>
+            <!-- SIDEBAR MENU (HP / layar kecil) -->
+            <div class="offcanvas offcanvas-start sidebar-guru no-print" tabindex="-1" id="sidebarGuru" aria-labelledby="sidebarGuruLabel">
+                <div class="offcanvas-header topbar">
+                    <div class="d-flex align-items-center" style="min-width:0;">
+                        <img id="sbLogoGuru" src="" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;" class="bg-white rounded-circle p-1 me-2 shadow-sm">
+                        <div style="line-height: 1.2; min-width:0;">
+                            <small id="sbYayasanGuru" class="d-block text-white-50 text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;"></small>
+                            <span id="sidebarGuruLabel" class="d-block fw-bold text-white text-truncate" style="font-size: 0.95rem;">Panel Guru BK</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Tutup"></button>
+                </div>
+                <div class="sb-user small" id="sbUserInfo"></div>
+                <div class="offcanvas-body p-0 d-flex flex-column">
+                    <div class="sb-menu">
+                    <button type="button" class="sb-link active" id="sbBtnDashboard" onclick="sbMenu('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</button>
+                    <button type="button" class="sb-link" id="sbBtnAnalisa" onclick="sbMenu('analisa')"><i class="fas fa-file-invoice"></i> Hasil Analisa</button>
+                    <button type="button" class="sb-link" id="sbBtnProfilKelas" onclick="sbMenu('profilKelas')"><i class="fas fa-chalkboard"></i> Profil Kelas</button>
+                    <button type="button" class="sb-link" id="sbBtnProfilKonseli" onclick="sbMenu('profilKonseli')"><i class="fas fa-user-check"></i> Profil Konseli</button>
+                    <button type="button" class="sb-link" id="sbBtnRumusan" onclick="sbMenu('rumusan')"><i class="fas fa-list-check"></i> Rumusan Kebutuhan</button>
+                    <button type="button" class="sb-link" id="sbBtnTujuan" onclick="sbMenu('tujuan')"><i class="fas fa-bullseye"></i> Rumusan Tujuan</button>
+                    <button type="button" class="sb-link" id="sbBtnKomponen" onclick="sbMenu('komponen')"><i class="fas fa-layer-group"></i> Komponen Program</button>
+                    <button type="button" class="sb-link" id="sbBtnActionPlan" onclick="sbMenu('actionPlan')"><i class="fas fa-calendar-check"></i> Action Plan</button>
+                    <button type="button" class="sb-link" id="sbBtnPengguna" onclick="sbMenu('pengguna')"><i class="fas fa-users-gear"></i> Pengguna</button>
+                    </div>
+                    <div class="sb-bottom mt-auto">
+                        <button type="button" class="sb-link" onclick="sbAksi(sbBukaPengaturan)"><i class="fas fa-cog"></i> Pengaturan</button>
+                        <button type="button" class="sb-link" onclick="sbAksi(changePwUI)"><i class="fas fa-key"></i> Ganti Password</button>
+                        <button type="button" class="sb-link sb-danger" onclick="sbAksi(logout)"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="menubar px-3">
+                <div class="container d-flex gap-2 flex-wrap">
+                    <button class="menu-link active" id="menuBtnDashboard" onclick="switchGuruMenu('dashboard')"><i class="fas fa-chart-line me-1"></i> Dashboard</button>
+                    <button class="menu-link" id="menuBtnAnalisa" onclick="switchGuruMenu('analisa')"><i class="fas fa-file-invoice me-1"></i> Hasil Analisa</button>
+                    <button class="menu-link" id="menuBtnProfilKelas" onclick="switchGuruMenu('profilKelas')"><i class="fas fa-chalkboard me-1"></i> Profil Kelas</button>
+                    <button class="menu-link" id="menuBtnProfilKonseli" onclick="switchGuruMenu('profilKonseli')"><i class="fas fa-user-check me-1"></i> Profil Konseli</button>
+                    <button class="menu-link" id="menuBtnRumusan" onclick="switchGuruMenu('rumusan')"><i class="fas fa-list-check me-1"></i> Rumusan Kebutuhan</button>
+                    <button class="menu-link" id="menuBtnTujuan" onclick="switchGuruMenu('tujuan')"><i class="fas fa-bullseye me-1"></i> Rumusan Tujuan</button>
+                    <button class="menu-link" id="menuBtnKomponen" onclick="switchGuruMenu('komponen')"><i class="fas fa-layer-group me-1"></i> Komponen Program</button>
+                    <button class="menu-link" id="menuBtnActionPlan" onclick="switchGuruMenu('actionPlan')"><i class="fas fa-calendar-check me-1"></i> Action Plan</button>
+<button class="menu-link" id="menuBtnPengguna" onclick="switchGuruMenu('pengguna')"><i class="fas fa-users-gear me-1"></i> Pengguna</button>
+                </div>
+            </div>
+            <div class="container py-4">
+                <div id="guruTabPengguna" style="display:none;">
+<div class="card p-4">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+<h4 class="fw-bold text-primary mb-0"><i class="fas fa-users-gear me-2"></i>Kelola Pengguna</h4>
+<div class="d-flex gap-2 flex-wrap">
+<select id="filterUserKelas" class="form-select form-select-sm" style="width:130px" onchange="renderUsers()"><option value="">Semua Kelas</option></select>
+<input id="searchUser" class="form-control form-control-sm" style="width:190px" placeholder="Cari nama / NISN..." onkeyup="renderUsers()">
+<button class="btn btn-outline-primary btn-sm" onclick="akhirTahunUI()"><i class="fas fa-graduation-cap me-1"></i> Akhir Tahun</button>
+<button class="btn btn-outline-primary btn-sm" onclick="importUsersUI()"><i class="fas fa-file-import me-1"></i> Impor dari Excel</button>
+<button class="btn btn-primary btn-sm" onclick="userForm()"><i class="fas fa-plus me-1"></i> Tambah</button>
+</div></div>
+<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-primary"><tr><th>Pengguna</th><th>Kelas</th><th class="text-center">Aksi</th></tr></thead><tbody id="tabelUserBody"></tbody></table></div>
+</div></div>
+<!-- DASHBOARD -->
+                <div id="guruTabDashboard">
+                    <div class="card p-4 mb-4 text-center bg-white border-bottom border-primary border-4 shadow-sm">
+                        <img id="guruHeaderLogo" src="" alt="Logo" style="width: 75px; height: 75px; object-fit: contain;" class="mx-auto mb-2 p-1 bg-light rounded-circle border">
+                        <div id="guruHeaderYayasan" class="text-uppercase text-muted small fw-bold mb-1" style="letter-spacing: 0.5px;"></div>
+                        <h3 id="guruHeaderSekolah" class="fw-bold text-dark mb-1"></h3>
+                        <p id="guruHeaderAlamat" class="text-secondary small mb-0"></p>
+                    </div>
+                    <div class="row text-white mb-4">
+                        <div class="col-md-4"><div class="card stat stat-1 p-3"><div class="d-flex justify-content-between align-items-center"><div><h6 class="text-uppercase small fw-bold mb-1">Seluruh Peserta Didik</h6><h3 id="statTotalSiswa" class="fw-bold mb-0">0</h3></div><i class="fas fa-users fa-2x opacity-50"></i></div></div></div>
+                        <div class="col-md-4"><div class="card stat stat-2 p-3"><div class="d-flex justify-content-between align-items-center"><div><h6 class="text-uppercase small fw-bold mb-1">Seluruh Kelas</h6><h3 id="statTotalKelas" class="fw-bold mb-0">0</h3></div><i class="fas fa-layer-group fa-2x opacity-50"></i></div></div></div>
+                        <div class="col-md-4"><div class="card stat stat-3 p-3"><div class="d-flex justify-content-between align-items-center"><div><h6 class="text-uppercase small fw-bold mb-1">Sudah Selesai AKPD</h6><h3 id="statTotalSelesai" class="fw-bold mb-0">0</h3></div><i class="fas fa-check-circle fa-2x opacity-50"></i></div></div></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6"><div class="card p-3"><h5 class="card-title fw-bold text-secondary mb-3"><i class="fas fa-chart-pie me-2"></i>Rekapan Bidang Layanan</h5><div style="height: 300px; position: relative;"><canvas id="chartBidang"></canvas></div></div></div>
+                        <div class="col-md-6"><div class="card p-3"><h5 class="card-title fw-bold text-secondary mb-3"><i class="fas fa-chart-bar me-2"></i>Selesai AKPD per Kelas</h5><div style="height: 300px; position: relative;"><canvas id="chartKelas"></canvas></div></div></div>
+                    </div>
+                    <div class="card p-4 mt-4">
+                        <h5 class="fw-bold text-secondary mb-3"><i class="fas fa-table me-2"></i>Rincian Masalah & Kebutuhan per Kelas</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped align-middle">
+                                <thead class="table-primary text-center"><tr><th>Kelas</th><th>Pribadi</th><th>Belajar</th><th>Sosial</th><th>Karir</th><th>Total Pilihan</th></tr></thead>
+                                <tbody id="tabelMasalahBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- ANALISA -->
+                <div id="guruTabAnalisa" style="display: none;">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <h4 class="fw-bold text-primary mb-0"><i class="fas fa-clipboard-list me-2"></i>Menu Hasil Analisa AKPD Siswa</h4>
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                <label class="small fw-semibold text-secondary">Filter Kelas:</label>
+                                <select id="filterKelasAnalisa" class="form-select form-select-sm" style="width: 130px;" onchange="filterTabelAnalisa()"><option value="SEMUA">Semua Kelas</option></select>
+                                <input type="text" id="searchAnalisa" class="form-control form-control-sm" placeholder="Cari nama / NISN..." onkeyup="filterTabelAnalisa()" style="width: 200px;">
+                                <button class="btn btn-primary btn-sm fw-semibold shadow-sm" onclick="cetakAnalisa()"><i class="fas fa-print me-1"></i> Cetak / PDF</button>
+                                <button class="btn btn-success btn-sm fw-semibold" onclick="loadAnalisaData()"><i class="fas fa-sync-alt me-1"></i> Segarkan</button>
+                            </div>
+                        </div>
+                        <div id="printableAnalisaArea" class="bg-white p-1">
+                            <div class="text-center mb-3 pb-2 border-bottom">
+                                <h5 class="fw-bold text-uppercase mb-1" id="printAnalisaSekolah">NAMA SEKOLAH</h5>
+                                <h6 class="fw-bold text-dark mb-1">HASIL ANALISA ASESMEN KEBUTUHAN PESERTA DIDIK (AKPD)</h6>
+                                <p class="text-secondary small mb-0">Kelas: <span id="labelAnalisaKelas" class="fw-bold text-primary">Semua Kelas</span> | Jumlah Responden: <span id="labelAnalisaTotal" class="fw-bold">0</span> | Tahun Ajaran: <span id="labelAnalisaTahun" class="fw-bold">-</span></p>
+                            </div>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-bordered table-striped table-hover align-middle table-sm" style="font-size: 0.8rem; width: 100%;">
+                                    <thead class="table-primary text-center"><tr><th>No</th><th>Waktu Submit</th><th>NISN</th><th>Nama Siswa</th><th>Kelas</th><th>Pribadi</th><th>Belajar</th><th>Sosial</th><th>Karir</th><th>Aspek Dominan</th></tr></thead>
+                                    <tbody id="tabelAnalisaBody"><tr><td colspan="10" class="text-center text-muted">Memuat data analisa...</td></tr></tbody>
+                                </table>
+                            </div>
+                            <div class="row mt-4 pt-2 text-dark" style="font-size: 0.85rem; page-break-inside: avoid;">
+                                <div class="col-6 text-start"><p class="mb-1">Mengetahui,</p><p class="mb-4">Kepala Madrasah</p><p class="fw-bold mb-0 text-decoration-underline" id="printAnalisaKepala">-</p></div>
+                                <div class="col-6 text-end"><p class="mb-1" id="printAnalisaTanggal">-</p><p class="mb-4">Guru Bimbingan Konseling</p><p class="fw-bold mb-0 text-decoration-underline" id="printAnalisaGuruBK">-</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- PROFIL KELAS -->
+                <div id="guruTabProfilKelas" style="display: none;">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 no-print">
+                            <div><h4 class="fw-bold text-primary mb-1"><i class="fas fa-chalkboard-teacher me-2"></i>Menu Profil Kelas</h4></div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <select id="filterKelasProfil" class="form-select form-select-sm" style="width: 150px;" onchange="loadProfilKelasData()"></select>
+                                <button class="btn btn-success btn-sm fw-semibold shadow-sm" onclick="window.print()"><i class="fas fa-print me-1"></i> Cetak / PDF</button>
+                            </div>
+                        </div>
+                        <div id="printableProfilArea" class="bg-white p-1">
+                            <div class="text-center mb-3 pb-2 border-bottom">
+                                <h5 class="fw-bold text-uppercase mb-1" id="printNamaSekolah">NAMA SEKOLAH</h5>
+                                <h6 class="fw-bold text-dark mb-1">PROFIL KEBUTUHAN LAYANAN BIMBINGAN DAN KONSELING</h6>
+                                <p class="text-secondary small mb-1">Kelas: <span id="labelKelasAktif" class="fw-bold text-primary">-</span> | Total Siswa: <span id="labelTotalSiswaKelas" class="fw-bold">-</span> | Total Responden: <span id="labelTotalRespondenKelas" class="fw-bold">-</span></p>
+                                <div class="d-flex justify-content-center gap-2 mt-1 mb-1 flex-wrap" style="font-size: 0.8rem;">
+                                    <span class="badge bg-primary px-2 py-1">Pribadi: <span id="rekapPribadiVal">0%</span></span>
+                                    <span class="badge bg-success px-2 py-1">Belajar: <span id="rekapBelajarVal">0%</span></span>
+                                    <span class="badge bg-warning text-dark px-2 py-1">Sosial: <span id="rekapSosialVal">0%</span></span>
+                                    <span class="badge bg-danger px-2 py-1">Karir: <span id="rekapKarirVal">0%</span></span>
+                                </div>
+                            </div>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-bordered align-middle table-sm" style="font-size: 0.8rem; width: 100%;">
+                                    <thead class="text-center" style="background-color: #ffc107; color: #000;">
+                                        <tr><th style="width: 6%;">NO</th><th style="width: 44%;">BUTIR ANGKET KEBUTUHAN PESERTA DIDIK</th><th style="width: 12%;">JML RESPONDEN</th><th style="width: 12%;">PROSENTASE</th><th style="width: 13%;">PRIORITAS</th><th style="width: 13%;">WAKTU LAYANAN</th></tr>
+                                    </thead>
+                                    <tbody id="tabelProfilKelasBody"><tr><td colspan="6" class="text-center text-muted py-4">Silakan pilih kelas terlebih dahulu.</td></tr></tbody>
+                                </table>
+                            </div>
+                            <div class="row mt-4 pt-2 text-dark" style="font-size: 0.85rem; page-break-inside: avoid;">
+                                <div class="col-6 text-start"><p class="mb-1">Mengetahui,</p><p class="mb-4">Kepala Madrasah</p><p class="fw-bold mb-0 text-decoration-underline" id="printNamaKepala">-</p></div>
+                                <div class="col-6 text-end"><p class="mb-1" id="printTanggalCetak">-</p><p class="mb-4">Guru Bimbingan Konseling</p><p class="fw-bold mb-0 text-decoration-underline" id="printNamaGuruBK">-</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- PROFIL KONSELI -->
+                <div id="guruTabProfilKonseli" style="display: none;">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 no-print">
+                            <div><h4 class="fw-bold text-primary mb-1"><i class="fas fa-user-check me-2"></i>Menu Profil Konseli</h4></div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <select id="filterKelasKonseli" class="form-select form-select-sm" style="width: 150px;" onchange="loadProfilKonseliData()"></select>
+                                <button class="btn btn-success btn-sm fw-semibold shadow-sm" onclick="window.print()"><i class="fas fa-print me-1"></i> Cetak / PDF</button>
+                            </div>
+                        </div>
+                        <div id="printableKonseliArea" class="bg-white p-1">
+                            <div class="text-center mb-3 pb-2 border-bottom">
+                                <h5 class="fw-bold text-uppercase mb-1" id="printKonseliSekolah">NAMA SEKOLAH</h5>
+                                <h6 class="fw-bold text-dark mb-1">PROFIL KONSELI / PESERTA DIDIK PENGISI AKPD</h6>
+                                <p class="text-secondary small mb-0">Kelas: <span id="labelKonseliKelasAktif" class="fw-bold text-primary">-</span> | Total Siswa Mengisi: <span id="labelKonseliTotalResponden" class="fw-bold">-</span></p>
+                            </div>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-bordered align-middle table-sm" style="font-size: 0.85rem; width: 100%;">
+                                    <thead class="table-primary text-center"><tr><th style="width: 10%;">NO</th><th style="width: 50%;">NAMA SISWA</th><th style="width: 20%;">JUMLAH</th><th style="width: 20%;">%</th></tr></thead>
+                                    <tbody id="tabelProfilKonseliBody"><tr><td colspan="4" class="text-center text-muted py-4">Silakan pilih kelas terlebih dahulu.</td></tr></tbody>
+                                </table>
+                            </div>
+                            <div class="row mt-4 pt-2 text-dark" style="font-size: 0.85rem; page-break-inside: avoid;">
+                                <div class="col-6 text-start"><p class="mb-1">Mengetahui,</p><p class="mb-4">Kepala Madrasah</p><p class="fw-bold mb-0 text-decoration-underline" id="printKonseliNamaKepala">-</p></div>
+                                <div class="col-6 text-end"><p class="mb-1" id="printKonseliTanggalCetak">-</p><p class="mb-4">Guru Bimbingan Konseling</p><p class="fw-bold mb-0 text-decoration-underline" id="printKonseliNamaGuruBK">-</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- RUMUSAN KEBUTUHAN -->
+                <div id="guruTabRumusan" style="display: none;">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 no-print">
+                            <div><h4 class="fw-bold text-primary mb-1"><i class="fas fa-list-check me-2"></i>Menu Rumusan Kebutuhan</h4></div>
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                <select id="filterTingkatKelasRumusan" class="form-select form-select-sm" style="width: 130px;" onchange="filterRumusanByTingkat()">
+                                    <option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option>
+                                </select>
+                                <button class="btn btn-success btn-sm fw-semibold shadow-sm" onclick="window.print()"><i class="fas fa-print me-1"></i> Cetak / PDF</button>
+                            </div>
+                        </div>
+                        <div id="printableRumusanArea" class="bg-white p-1">
+                            <div class="text-center mb-3 pb-2 border-bottom">
+                                <h5 class="fw-bold text-uppercase mb-1" id="printRumusanSekolah">NAMA SEKOLAH</h5>
+                                <h6 class="fw-bold text-dark mb-1">RUMUSAN KEBUTUHAN LAYANAN BIMBINGAN DAN KONSELING</h6>
+                                <p class="text-secondary small mb-0">Tingkat Kelas: <span id="labelTingkatKelasAktif" class="fw-bold text-primary">X</span> | Tahun Ajaran: <span id="labelRumusanTahun" class="fw-bold">-</span></p>
+                            </div>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered align-middle table-sm" style="font-size: 0.85rem; width: 100%;">
+                                    <thead class="table-primary text-center">
+                                        <tr>
+                                            <th style="width: 5%;">NO</th>
+                                            <th style="width: 15%;">BIDANG LAYANAN</th>
+                                            <th style="width: 40%;">ASESMEN KEBUTUHAN</th>
+                                            <th style="width: 40%;">RUMUSAN KEBUTUHAN</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelRumusanBody"><tr><td colspan="4" class="text-center text-muted py-4">Memuat data rumusan kebutuhan...</td></tr></tbody>
+                                </table>
+                            </div>
+                            <div class="row mt-4 pt-2 text-dark" style="font-size: 0.85rem; page-break-inside: avoid;">
+                                <div class="col-6 text-start"><p class="mb-1">Mengetahui,</p><p class="mb-5">Kepala Madrasah</p><p class="fw-bold mb-0 text-decoration-underline" id="printRumusanNamaKepala">-</p></div>
+                                <div class="col-6 text-end"><p class="mb-1" id="printRumusanTanggalCetak">-</p><p class="mb-5">Guru Bimbingan Konseling</p><p class="fw-bold mb-0 text-decoration-underline" id="printRumusanNamaGuruBK">-</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- RUMUSAN TUJUAN -->
+                <div id="guruTabTujuan" style="display: none;">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 no-print">
+                            <div><h4 class="fw-bold text-primary mb-1"><i class="fas fa-bullseye me-2"></i>Menu Rumusan Tujuan</h4></div>
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                <select id="filterTingkatKelasTujuan" class="form-select form-select-sm" style="width: 130px;" onchange="filterTujuanByTingkat()">
+                                    <option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option>
+                                </select>
+                                <button class="btn btn-success btn-sm fw-semibold shadow-sm" onclick="window.print()"><i class="fas fa-print me-1"></i> Cetak / PDF</button>
+                            </div>
+                        </div>
+                        <div id="printableTujuanArea" class="bg-white p-1">
+                            <div class="text-center mb-3 pb-2 border-bottom">
+                                <h5 class="fw-bold text-uppercase mb-1" id="printTujuanSekolah">NAMA SEKOLAH</h5>
+                                <h6 class="fw-bold text-dark mb-1">RUMUSAN TUJUAN LAYANAN BIMBINGAN DAN KONSELING</h6>
+                                <p class="text-secondary small mb-0">Tingkat Kelas: <span id="labelTingkatTujuanAktif" class="fw-bold text-primary">X</span> | Tahun Ajaran: <span id="labelTujuanTahun" class="fw-bold">-</span></p>
+                            </div>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered align-middle table-sm" style="font-size: 0.85rem; width: 100%;">
+                                    <thead class="table-primary text-center">
+                                        <tr><th style="width: 8%;">NO</th><th style="width: 22%;">BIDANG LAYANAN</th><th style="width: 35%;">RUMUSAN KEBUTUHAN</th><th style="width: 35%;">TUJUAN LAYANAN</th></tr>
+                                    </thead>
+                                    <tbody id="tabelTujuanBody"><tr><td colspan="4" class="text-center text-muted py-4">Memuat data rumusan tujuan...</td></tr></tbody>
+                                </table>
+                            </div>
+                            <div class="row mt-4 pt-2 text-dark" style="font-size: 0.85rem; page-break-inside: avoid;">
+                                <div class="col-6 text-start"><p class="mb-1">Mengetahui,</p><p class="mb-5">Kepala Madrasah</p><p class="fw-bold mb-0 text-decoration-underline" id="printTujuanNamaKepala">-</p></div>
+                                <div class="col-6 text-end"><p class="mb-1" id="printTujuanTanggalCetak">-</p><p class="mb-5">Guru Bimbingan Konseling</p><p class="fw-bold mb-0 text-decoration-underline" id="printTujuanNamaGuruBK">-</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- KOMPONEN PROGRAM -->
+                <div id="guruTabKomponen" style="display: none;">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 no-print">
+                            <div><h4 class="fw-bold text-primary mb-1"><i class="fas fa-layer-group me-2"></i>Menu Komponen Program</h4></div>
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                <select id="filterTingkatKelasKomponen" class="form-select form-select-sm" style="width: 130px;" onchange="filterKomponenByTingkat()">
+                                    <option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option>
+                                </select>
+                                <button class="btn btn-success btn-sm fw-semibold shadow-sm" onclick="window.print()"><i class="fas fa-print me-1"></i> Cetak / PDF</button>
+                            </div>
+                        </div>
+                        <div id="printableKomponenArea" class="bg-white p-1">
+                            <div class="text-center mb-3 pb-2 border-bottom">
+                                <h5 class="fw-bold text-uppercase mb-1" id="printKomponenSekolah">NAMA SEKOLAH</h5>
+                                <h6 class="fw-bold text-dark mb-1">PROPORSI DAN ALOKASI WAKTU KOMPONEN PROGRAM BK</h6>
+                                <p class="text-secondary small mb-0">Tingkat Kelas: <span id="labelTingkatKomponenAktif" class="fw-bold text-primary">X</span> | Tahun Ajaran: <span id="labelKomponenTahun" class="fw-bold">-</span></p>
+                            </div>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered align-middle table-sm" style="font-size: 0.85rem; width: 100%;">
+                                    <thead class="table-primary text-center">
+                                        <tr>
+                                            <th style="width: 6%;">NO</th>
+                                            <th style="width: 30%;">KOMPONEN PROGRAM</th>
+                                            <th style="width: 34%;">MATERI LAYANAN</th>
+                                            <th style="width: 10%;">JUMLAH</th>
+                                            <th style="width: 10%;">PROPORSI</th>
+                                            <th style="width: 10%;">WAKTU</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelKomponenBody"><tr><td colspan="6" class="text-center text-muted py-4">Memuat data komponen program...</td></tr></tbody>
+                                    <tfoot class="table-light fw-bold text-center" id="tabelKomponenFooter">
+                                        <tr><td colspan="3" class="text-end">JUMLAH TOTAL :</td><td id="footJumlahTotal">0</td><td id="footProporsiTotal">100%</td><td id="footWaktuTotal">24 Jam</td></tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <div class="row mt-4 pt-2 text-dark" style="font-size: 0.85rem; page-break-inside: avoid;">
+                                <div class="col-6 text-start"><p class="mb-1">Mengetahui,</p><p class="mb-5">Kepala Madrasah</p><p class="fw-bold mb-0 text-decoration-underline" id="printKomponenNamaKepala">-</p></div>
+                                <div class="col-6 text-end"><p class="mb-1" id="printKomponenTanggalCetak">-</p><p class="mb-5">Guru Bimbingan Konseling</p><p class="fw-bold mb-0 text-decoration-underline" id="printKomponenNamaGuruBK">-</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ACTION PLAN -->
+                <div id="guruTabActionPlan" style="display: none;">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 no-print">
+                            <div><h4 class="fw-bold text-primary mb-1"><i class="fas fa-calendar-check me-2"></i>Menu Action Plan (Rencana Tindak Lanjut)</h4></div>
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                <select id="filterTingkatKelasAction" class="form-select form-select-sm" style="width: 130px;" onchange="filterActionPlanByTingkat()">
+                                    <option value="X">Kelas X</option><option value="XI">Kelas XI</option><option value="XII">Kelas XII</option>
+                                </select>
+                                <button class="btn btn-success btn-sm fw-semibold shadow-sm" onclick="window.print()"><i class="fas fa-print me-1"></i> Cetak / PDF</button>
+                            </div>
+                        </div>
+                        <div id="printableActionPlanArea" class="bg-white p-1">
+                            <div class="text-center mb-3 pb-2 border-bottom">
+                                <h6 class="text-uppercase fw-bold text-muted mb-1" id="printActionYayasan" style="font-size: 0.75rem; letter-spacing: 0.5px;">NAMA YAYASAN</h6>
+                                <h5 class="fw-bold text-uppercase mb-1" id="printActionSekolah">NAMA SEKOLAH</h5>
+                                <h6 class="fw-bold text-dark mb-1">RENCANA OPERASIONAL PROGRAM LAYANAN BK</h6>
+                                <p class="text-secondary small mb-0">Tingkat Kelas: <span id="labelTingkatActionAktif" class="fw-bold text-primary">X</span> | Tahun Ajaran: <span id="labelActionTahun" class="fw-bold">-</span></p>
+                            </div>
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered align-middle table-sm" style="font-size: 0.75rem; width: 100%;">
+                                    <thead class="table-primary text-center">
+                                        <tr>
+                                            <th>NO</th>
+                                            <th>KOMPONEN PROGRAM</th>
+                                            <th>BIDANG</th>
+                                            <th>TUJUAN LAYANAN</th>
+                                            <th>MATERI / KEGIATAN</th>
+                                            <th>STRATEGI</th>
+                                            <th>SASARAN</th>
+                                            <th>WAKTU</th>
+                                            <th>EVALUASI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelActionPlanBody"><tr><td colspan="9" class="text-center text-muted py-4">Memuat data Action Plan...</td></tr></tbody>
+                                </table>
+                            </div>
+                            <div class="row mt-4 pt-2 text-dark" style="font-size: 0.85rem; page-break-inside: avoid;">
+                                <div class="col-6 text-start"><p class="mb-1">Mengetahui,</p><p class="mb-5">Kepala Madrasah</p><p class="fw-bold mb-0 text-decoration-underline" id="printActionNamaKepala">-</p></div>
+                                <div class="col-6 text-end"><p class="mb-1" id="printActionTanggalCetak">-</p><p class="mb-5">Guru Bimbingan Konseling</p><p class="fw-bold mb-0 text-decoration-underline" id="printActionNamaGuruBK">-</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="app-watermark">Dikembangkan oleh : <span>Nama Pengembang / Tim IT</span></div>
+        </div>
+        <!-- HALAMAN SISWA -->
+        <div id="siswaSection" style="display: none;">
+            <nav class="navbar navbar-expand-lg navbar-dark topbar shadow-sm px-4">
+                <div class="container-fluid">
+                    <a class="navbar-brand d-flex align-items-center" href="#"><img id="navLogoSiswa" src="" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;" class="bg-white rounded-circle p-1 me-2 shadow-sm"><div style="line-height: 1.2;"><small id="navYayasanSiswa" class="d-block text-white-50 text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;"></small><span id="navNamaSekolahSiswa" class="d-block fw-bold" style="font-size: 1rem;">Asesmen Kebutuhan Peserta Didik</span></div></a>
+                    <div><span class="text-white me-3 small" id="userInfoSiswa"></span><button class="btn btn-light btn-sm fw-semibold shadow-sm me-2" onclick="changePwUI()"><i class="fas fa-key me-1"></i> Ganti Password</button><button class="btn btn-light btn-sm text-success fw-semibold shadow-sm" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i> Keluar</button></div>
+                </div>
+            </nav>
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card p-4 mb-4 text-center bg-white border-bottom border-success border-4 shadow-sm">
+                            <img id="siswaHeaderLogo" src="" alt="Logo" style="width: 75px; height: 75px; object-fit: contain;" class="mx-auto mb-2 p-1 bg-light rounded-circle border">
+                            <div id="siswaHeaderYayasan" class="text-uppercase text-muted small fw-bold mb-1" style="letter-spacing: 0.5px;"></div>
+                            <h3 id="siswaHeaderSekolah" class="fw-bold text-dark mb-1"></h3>
+                            <p id="siswaHeaderAlamat" class="text-secondary small mb-2"></p>
+                            <div class="alert alert-success py-2 px-3 mt-3 mb-0 text-success fw-semibold small d-inline-block"><i class="fas fa-smile-beam me-1"></i> <span id="salamSiswaText">Assalamu'alaikum, selamat datang di Aplikasi AKPD Digital.</span></div>
+                        </div>
+                        <div class="card p-4">
+                            <div class="alert alert-info small shadow-sm" role="alert"><i class="fas fa-info-circle me-1"></i> Berikan <strong>checklist (centang)</strong> jika sesuai dengan keadaan diri Anda. Pertanyaan bersifat opsional.</div>
+                            <form id="akpdForm" onsubmit="submitAkpdForm(event)">
+                                <div id="soalContainer"></div>
+                                <div class="d-grid mt-4"><button type="submit" class="btn btn-success py-2 fw-semibold shadow-sm"><i class="fas fa-paper-plane me-2"></i> Kirim Jawaban AKPD</button></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="app-watermark">Dikembangkan oleh : <span>Nama Pengembang / Tim IT</span></div>
+        </div>
+    </div>
+    <!-- MODAL SETTING -->
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header topbar text-white"><h5 class="modal-title fw-bold"><i class="fas fa-cog me-2"></i>Pengaturan Sekolah & Yayasan</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="settingsForm" onsubmit="saveSettings(event)">
+                        <div class="mb-3"><label class="form-label small fw-semibold">Nama Yayasan / Naungan</label><input type="text" id="setYayasan" class="form-control form-control-sm" required></div>
+                        <div class="mb-3"><label class="form-label small fw-semibold">Nama Sekolah / Madrasah</label><input type="text" id="setSekolah" class="form-control form-control-sm" required></div>
+                        <div class="mb-3"><label class="form-label small fw-semibold">Alamat Sekolah</label><input type="text" id="setAlamat" class="form-control form-control-sm" required></div>
+                        <div class="mb-3"><label class="form-label small fw-semibold">Nama Kepala Sekolah / Madrasah</label><input type="text" id="setKepala" class="form-control form-control-sm" required></div>
+                        <div class="mb-3"><label class="form-label small fw-semibold">Nama Guru BK</label><input type="text" id="setGuruBK" class="form-control form-control-sm" required></div>
+                        <div class="mb-3"><label class="form-label small fw-semibold">Kota (untuk tanda tangan cetak)</label><input type="text" id="setKota" class="form-control form-control-sm"></div>
+                        <div class="mb-3"><label class="form-label small fw-semibold">Tahun Ajaran</label><input type="text" id="setTahunAjaran" class="form-control form-control-sm" required></div>
+                        <div class="mb-3"><label class="form-label small fw-semibold">URL Logo Sekolah</label><input type="text" id="setLogo" class="form-control form-control-sm" required></div>
+                        <div class="d-grid"><button type="submit" class="btn btn-primary btn-sm fw-semibold">Simpan Pengaturan</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Script Logika -->
+    <!-- Script Logika -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
